@@ -9,13 +9,27 @@ El flujo completo sigue buenas prácticas de ingeniería de datos y se basa en u
 
 ## 🧱 Estructura del proyecto
 
+```text
+RAW (CSV, fuentes simuladas)
+   └── Extract  (etl/extract.py)
+         ↓
+       Transform (etl/transform.py)
+         ↓
+       Load      (etl/load.py)  →  Data Warehouse (SQLite/PostgreSQL)
+                                     └── Modelo Estrella (DDL/star_schema.sql)
+                                              ↓
+                                       Dashboard (Looker Studio)
+
+```
+---
+
+Esa sección describe el flujo lógico del proyecto desde la ingesta de archivos CSV hasta la visualización final en Looker Studio, manteniendo el formato limpio y consistente con el resto del README.
 
 ---
 
 ## 🧩 Esquema Estrella
 
 ### 🧠 Tabla de Hechos
-**FactSales**
 | Campo | Descripción | Tipo |
 |-------|--------------|------|
 | sale_id | Identificador de la venta | INTEGER |
@@ -57,7 +71,8 @@ El flujo completo sigue buenas prácticas de ingeniería de datos y se basa en u
 ### 1️⃣ Extract
 Lectura de archivos `.csv` desde la carpeta `RAW`:
 ```bash
-python -m etl.extract´´´
+python -m etl.extract
+```
 
 ### 2️⃣ Transform
 Limpieza, estandarización de campos y creación de nuevas métricas derivadas.  
@@ -65,7 +80,22 @@ Incluye:
 - Conversión de tipos y manejo de valores nulos  
 - Integración de tablas (joins entre productos, tiendas y canales)  
 - Cálculo de métricas base: monto, cantidad y fecha de venta  
-- Normalización de provincias y canales  
-
+- Normalización de provincias y canales
 ```bash
-python -m etl.transform
+python -m etl.transform 
+```
+
+### 3️⃣ Load
+Carga de los datos transformados en el modelo estrella definido en SQL.
+Se utiliza una base local (por defecto SQLite), aunque el diseño es compatible con PostgreSQL.
+```bash
+python -m etl.load
+```
+
+### ▶️ Ejecución completa del pipeline
+Ejecuta los tres pasos anteriores en secuencia, registrando logs del proceso:
+```bash
+python -m etl.run_pipeline
+```
+---
+Los logs de ejecución se almacenan en /logs/pipeline.log e incluyen el conteo de filas procesadas por tabla.
