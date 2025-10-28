@@ -1,0 +1,3 @@
+product_sk,product_id_src,sku,name,category_id,category_name,list_price,status,created_at
+1,1,ECO-CLASSIC-A,Classic A Bottle,2,Classic,12000.0,A,2024-01-01 00:00:00
+2,2,ECO-SPORT-B,Sport B Bottle,3,Sport,15000.0,A,2024-01-01 00:00:00

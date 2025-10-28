@@ -1,0 +1,17 @@
+paths:
+  raw: "raw"
+  warehouse: "warehouse"
+  dim: "warehouse/dim"
+  fact: "warehouse/fact"
+
+business_rules:
+  sales_status_included: ["PAID", "FULFILLED"]
+  nps:
+    detractor_max: 6
+    passive_min: 7
+    passive_max: 8
+    promoter_min: 9
+
+mappings:
+  web_source_to_channel:
+    default: "ONLINE"   # todas las sesiones → ONLINE (ajustable)
