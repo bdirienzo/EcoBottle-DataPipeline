@@ -30,94 +30,87 @@ Esa sección describe el flujo lógico del proyecto desde la ingesta de archivos
 ## 🧩 Esquema Estrella
 
 ```
-```mermaid
 erDiagram
-  %% ============================
-  %% RELACIONES PRINCIPALES
-  %% ============================
-  DimDate ||--o{ FactSales : "date_id"
-  DimCustomer ||--o{ FactSales : "customer_id"
-  DimProduct ||--o{ FactSales : "product_id"
-  DimStore ||--o{ FactSales : "store_id"
-  DimChannel ||--o{ FactSales : "channel_id"
+  %% Relaciones principales
+  DimDate     ||--o{ FactSales : date_id
+  DimCustomer ||--o{ FactSales : customer_id
+  DimProduct  ||--o{ FactSales : product_id
+  DimStore    ||--o{ FactSales : store_id
+  DimChannel  ||--o{ FactSales : channel_id
 
-  DimDate ||--o{ FactNPS : "date_id"
-  DimCustomer ||--o{ FactNPS : "customer_id"
+  DimDate     ||--o{ FactNPS   : date_id
+  DimCustomer ||--o{ FactNPS   : customer_id
 
-  %% Relaciones con provincias
-  DimProvince ||--o{ DimStore : "province_id"
-  DimProvince ||--o{ DimCustomer : "province_id"
+  %% Provincias
+  DimProvince ||--o{ DimStore    : province_id
+  DimProvince ||--o{ DimCustomer : province_id
 
-  %% ============================
-  %% TABLAS DIMENSIÓN
-  %% ============================
+  %% Dimensiones
   DimDate {
-    INTEGER date_id PK
-    DATE full_date
-    INTEGER year
-    INTEGER quarter
-    INTEGER month
-    TEXT month_name
-    INTEGER day
-    INTEGER is_weekend
+    int    date_id PK
+    date   full_date
+    int    year
+    int    quarter
+    int    month
+    string month_name
+    int    day
+    bool   is_weekend
   }
 
   DimProvince {
-    INTEGER province_id PK
-    TEXT province_name
-    TEXT region
+    int    province_id PK
+    string province_name
+    string region
   }
 
   DimChannel {
-    INTEGER channel_id PK
-    TEXT channel_name
+    int    channel_id PK
+    string channel_name
   }
 
   DimStore {
-    INTEGER store_id PK
-    TEXT store_name
-    INTEGER province_id FK
+    int    store_id PK
+    string store_name
+    int    province_id FK
   }
 
   DimProduct {
-    INTEGER product_id PK
-    TEXT product_code
-    TEXT product_name
-    TEXT category
-    TEXT brand
-    REAL unit_price
+    int    product_id PK
+    string product_code
+    string product_name
+    string category
+    string brand
+    float  unit_price
   }
 
   DimCustomer {
-    INTEGER customer_id PK
-    TEXT customer_code
-    TEXT full_name
-    TEXT email
-    INTEGER province_id FK
-    DATE created_at
+    int    customer_id PK
+    string customer_code
+    string full_name
+    string email
+    int    province_id FK
+    date   created_at
   }
 
-  %% ============================
-  %% TABLAS DE HECHOS
-  %% ============================
+  %% Hechos
   FactSales {
-    INTEGER sales_line_id PK
-    INTEGER date_id FK
-    INTEGER customer_id FK
-    INTEGER product_id FK
-    INTEGER store_id FK
-    INTEGER channel_id FK
-    INTEGER quantity
-    REAL unit_price
-    REAL amount
+    int    sales_line_id PK
+    int    date_id FK
+    int    customer_id FK
+    int    product_id FK
+    int    store_id FK
+    int    channel_id FK
+    int    quantity
+    float  unit_price
+    float  amount
   }
 
   FactNPS {
-    INTEGER nps_id PK
-    INTEGER date_id FK
-    INTEGER customer_id FK
-    INTEGER score
-    TEXT classification
+    int    nps_id PK
+    int    date_id FK
+    int    customer_id FK
+    int    score
+    string classification
   }
 ```
 
