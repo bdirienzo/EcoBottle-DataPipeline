@@ -1,7 +1,14 @@
+# === Core data stack ===
 numpy==2.3.4
 pandas==2.3.3
+
+# === Date and time handling ===
 python-dateutil==2.9.0.post0
 pytz==2025.2
-PyYAML==6.0.3
-six==1.17.0
 tzdata==2025.2
+
+# === Configuration and YAML ===
+PyYAML==6.0.3
+
+# === Compatibility utilities (used indirectly by pandas/dateutil) ===
+six==1.17.0
