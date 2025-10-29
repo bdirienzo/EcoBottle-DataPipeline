@@ -350,3 +350,12 @@ Brindar una herramienta de análisis que permita:
 ![Dashboard Looker Studio](assets/dashboard_preview.png)
 
 ---
+
+## 🧾 Licencia y reconocimiento
+
+Este proyecto fue desarrollado por **Bernardo Di Rienzo** en el marco de la Licenciatura en Ciencia de Datos de la Universidad Austral (2025).
+
+Los archivos originales de datos (`/raw`) y el diagrama entidad–relación (`DER`) provienen del repositorio académico base del profesor **Augusto Carmona**, utilizados únicamente como punto de partida para la práctica de modelado y análisis.
+
+> © 2025 Bernardo Di Rienzo – MIT License. Todos los derechos reservados sobre los desarrollos y documentación propios.
+
