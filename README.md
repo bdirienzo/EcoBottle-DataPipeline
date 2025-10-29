@@ -76,160 +76,169 @@ El **esquema estrella** consolida los procesos clave del negocio en varias *fact
 
 ### 🧩 Diagrama del Modelo Estrella
 El siguiente diagrama, generado con **Mermaid**, representa la estructura final del Data Warehouse, donde las tablas de hechos se conectan con sus respectivas dimensiones:
-
 ```mermaid
 erDiagram
-  %% =====================================
-  %% RELACIONES PRINCIPALES
-  %% =====================================
-  DimCalendar ||--o{ FactSalesOrder        : date_id
-  DimCalendar ||--o{ FactSalesOrderItem    : date_id
-  DimCalendar ||--o{ FactPayment           : date_id
-  DimCalendar ||--o{ FactShipment          : ship_date_id
-  DimCalendar ||--o{ FactWebSession        : session_date_id
-  DimCalendar ||--o{ FactNpsResponse       : response_date_id
+  %% =========================
+  %% RELACIONES (según tu ETL)
+  %% =========================
+  DimCalendar ||--o{ FactSalesOrder        : date_sk
+  DimCalendar ||--o{ FactSalesOrderItem    : date_sk
+  DimCalendar ||--o{ FactPayment           : date_sk
+  DimCalendar ||--o{ FactShipment          : shipped_date_sk
+  DimCalendar ||--o{ FactShipment          : delivered_date_sk
+  DimCalendar ||--o{ FactWebSession        : date_sk
+  DimCalendar ||--o{ FactNpsResponse       : date_sk
 
-  DimCustomers ||--o{ FactSalesOrder       : customer_id
-  DimCustomers ||--o{ FactSalesOrderItem   : customer_id
-  DimCustomers ||--o{ FactPayment          : customer_id
-  DimCustomers ||--o{ FactShipment         : customer_id
-  DimCustomers ||--o{ FactWebSession       : customer_id
-  DimCustomers ||--o{ FactNpsResponse      : customer_id
+  DimCustomer ||--o{ FactSalesOrder        : customer_sk
+  DimCustomer ||--o{ FactWebSession        : customer_id
+  DimCustomer ||--o{ FactNpsResponse       : customer_id
 
-  DimChannel ||--o{ FactSalesOrder         : channel_id
-  DimChannel ||--o{ FactPayment            : channel_id
-  DimChannel ||--o{ FactWebSession         : channel_id
+  DimChannel  ||--o{ FactSalesOrder        : channel_sk
+  DimChannel  ||--o{ FactSalesOrderItem    : channel_sk
+  DimChannel  ||--o{ FactWebSession        : channel_sk
+  DimChannel  ||--o{ FactNpsResponse       : channel_sk
 
-  DimProduct ||--o{ FactSalesOrderItem     : product_id
-  DimStore   ||--o{ FactSalesOrder         : store_id
-  DimStore   ||--o{ FactShipment           : store_id
+  DimProduct  ||--o{ FactSalesOrderItem    : product_sk
+  DimStore    ||--o{ FactSalesOrder        : store_id_src
 
-  DimProvince ||--o{ DimStore              : province_id
-  DimProvince ||--o{ DimCustomers          : province_id
-  DimAddress  ||--o{ DimCustomers          : address_id
+  DimProvince ||--o{ DimStore              : province_sk
+  DimProvince ||--o{ FactSalesOrder        : province_sk
+  DimProvince ||--o{ FactShipment          : province_sk
 
-  %% =====================================
-  %% TABLAS DIMENSIÓN
-  %% =====================================
+  DimAddress  ||--o{ DimCustomer           : address_id_src
+
+  %% ================
+  %% DIMENSIONES
+  %% ================
   DimCalendar {
-    int    date_id PK
+    int    date_sk PK
     date   full_date
     int    year
     int    quarter
     int    month
     string month_name
-    int    day
-    bool   is_weekend
+    int    week
+    int    dow
+    bool   is_month_end
   }
 
   DimProvince {
-    int    province_id PK
+    int    province_sk PK
     string province_name
-    string region
+    string code
   }
 
   DimChannel {
-    int    channel_id PK
-    string channel_name
+    int    channel_sk PK
+    string code
+    string name
   }
 
   DimStore {
-    int    store_id PK
+    int    store_id_src PK
     string store_name
-    int    province_id FK
+    int    province_sk FK
   }
 
   DimProduct {
-    int    product_id PK
-    string product_code
+    int    product_sk PK
+    int    product_id_src
+    string sku
     string product_name
     string category
-    string brand
-    float  unit_price
+    float  list_price
+    string status
   }
 
-  DimCustomers {
-    int    customer_id PK
-    string customer_code
+  DimCustomer {
+    int    customer_sk PK
+    int    customer_id_src
     string full_name
     string email
-    int    province_id FK
-    int    address_id FK
+    int    province_sk FK
+    int    address_id_src FK
     date   created_at
   }
 
   DimAddress {
-    int    address_id PK
-    string street
+    int    address_id_src PK
+    string line1
     string city
     string postal_code
-    int    province_id FK
+    int    province_sk FK
   }
 
-  %% =====================================
-  %% TABLAS DE HECHOS
-  %% =====================================
+  %% ===========
+  %% HECHOS
+  %% ===========
   FactSalesOrder {
-    int    sales_order_id PK
-    int    date_id FK
-    int    customer_id FK
-    int    store_id FK
-    int    channel_id FK
+    int    order_id PK
+    int    date_sk FK
+    int    channel_sk FK
+    int    customer_sk FK
+    int    store_id_src FK
+    int    province_sk FK
+    float  subtotal
+    float  tax_amount
+    float  shipping_fee
     float  total_amount
-    string order_status
+    string status
+    string currency_code
   }
 
   FactSalesOrderItem {
     int    order_item_id PK
-    int    sales_order_id FK
-    int    date_id FK
-    int    product_id FK
-    int    customer_id FK
+    int    order_id FK
+    int    date_sk FK
+    int    channel_sk FK
+    int    product_sk FK
     int    quantity
     float  unit_price
-    float  subtotal
+    float  discount_amount
+    float  line_total
   }
 
   FactPayment {
     int    payment_id PK
-    int    date_id FK
-    int    customer_id FK
-    int    channel_id FK
+    int    order_id FK
+    int    date_sk FK
     string method
-    float  amount
     string status
+    float  amount
   }
 
   FactShipment {
     int    shipment_id PK
-    int    ship_date_id FK
-    int    customer_id FK
-    int    store_id FK
-    int    province_id FK
+    int    shipped_date_sk FK
+    int    delivered_date_sk FK
+    int    order_id FK
+    int    province_sk FK
     string carrier
-    float  cost
-    int    delivery_days
+    string status
+    float  lead_time_days
   }
 
   FactWebSession {
     int    session_id PK
-    int    session_date_id FK
-    int    customer_id FK
-    int    channel_id FK
-    string device_type
-    string source_medium
-    int    duration_seconds
+    int    date_sk FK
+    int    channel_sk FK
+    int    customer_id
+    string device
+    string source
   }
 
   FactNpsResponse {
     int    nps_id PK
-    int    response_date_id FK
-    int    customer_id FK
+    int    date_sk FK
+    int    channel_sk FK
+    int    customer_id
     int    score
-    string classification
+    bool   is_detractor
+    bool   is_passive
+    bool   is_promoter
+    string comment
   }
-
-```
+````
 
 ## ⚙️ Pipeline ETL
 
