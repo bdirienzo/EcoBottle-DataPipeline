@@ -355,7 +355,7 @@ Brindar una herramienta de análisis que permita:
 ---
 
 📊 **Herramienta:** [Google Looker Studio](https://lookerstudio.google.com/)  
-📷 *Captura del dashboard final (opcional):*  
+📷 *Captura del dashboard final:*  
 ![Dashboard Looker Studio](assets/dashboard_preview.png)
 
 ---
