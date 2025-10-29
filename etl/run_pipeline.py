@@ -1,9 +1,3 @@
-# etl/run_pipeline.py
-"""
-Orquestador estándar ETL: Extract -> Transform -> Load -> Data Quality
-Correr desde la raíz del proyecto:
-    python -m etl.run_pipeline
-"""
 from .extract.extract_raw import extract
 from .transform.dims import (
     build_dim_calendar, build_dim_channel, build_dim_province,
@@ -39,7 +33,7 @@ def main():
     fact_nps_response(ex, dim_channel)
 
     log.info("=== LOAD ===")
-    load()   # (placeholder: ya escribimos CSV en /warehouse)
+    load()
 
     log.info("=== DATA QUALITY ===")
     run_basic_checks()

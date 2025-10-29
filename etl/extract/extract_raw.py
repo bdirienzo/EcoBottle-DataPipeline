@@ -1,6 +1,3 @@
-# En este TP, "Extract" = leer CSV de /raw y retornar dataframes (sin modificar).
-# Si mañana traés APIs o DBs, expandís este módulo.
-
 from etl.transform.utils import read_raw
 
 def extract():

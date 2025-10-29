@@ -5,24 +5,20 @@ import yaml
 import logging
 import os
 
-# ---- Logging estándar
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 log = logging.getLogger("etl")
 
-# ---- Paths RESUELTOS por archivo (no por cwd)
-THIS_FILE = Path(__file__).resolve()          # .../etl/transform/utils.py
-ETL_DIR   = THIS_FILE.parents[1]              # .../etl
-PROJECT   = ETL_DIR.parent                    # raíz del repo: .../mkt_tp_final
+THIS_FILE = Path(__file__).resolve()
+ETL_DIR   = THIS_FILE.parents[1]
+PROJECT   = ETL_DIR.parent
 CONFIG    = ETL_DIR / "config" / "settings.yaml"
 
 if not CONFIG.exists():
     raise FileNotFoundError(f"No encuentro settings.yaml en: {CONFIG}")
 
-# ---- Config
 with open(CONFIG, "r", encoding="utf-8") as f:
     CFG = yaml.safe_load(f)
 
-# Rutas desde PROJECT + lo definido en YAML (raw, warehouse/dim/fact)
 RAW  = PROJECT / CFG["paths"]["raw"]
 WH   = PROJECT / CFG["paths"]["warehouse"]
 DIM  = PROJECT / CFG["paths"]["dim"]
