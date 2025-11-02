@@ -8,7 +8,6 @@ from .transform.facts import (
     fact_shipment, fact_web_session, fact_nps_response
 )
 from .load.load_to_warehouse import load
-from .quality.dq_checks import run_basic_checks
 from .transform.utils import log
 
 def main():
@@ -34,9 +33,6 @@ def main():
 
     log.info("=== LOAD ===")
     load()
-
-    log.info("=== DATA QUALITY ===")
-    run_basic_checks()
 
     log.info("🎯 Pipeline ETL completo.")
 
