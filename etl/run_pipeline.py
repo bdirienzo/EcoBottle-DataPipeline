@@ -26,7 +26,7 @@ def main():
     log.info("=== TRANSFORM (FACT) ===")
     fact_sales_order(ex, dim_channel, dim_customer, dim_address, dim_store)
     fact_sales_order_item(ex, dim_channel, dim_product)
-    fact_payment(ex)
+    fact_payment(ex, dim_address)
     fact_shipment(ex, dim_address)
     fact_web_session(ex, dim_channel)
     fact_nps_response(ex, dim_channel)

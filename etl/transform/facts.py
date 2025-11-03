@@ -4,6 +4,7 @@ from etl.transform.utils import write_fact, add_date_sk, CFG
 def fact_sales_order(ex, dim_channel, dim_customer, dim_address, dim_store):
     so = ex["sales_order"].rename(columns={"order_id": "order_id_src"})
     so = add_date_sk(so, "order_date")
+    so["store_id"] = so["store_id"].astype("Int64")
 
     so = so.merge(dim_channel[["channel_sk", "channel_id_src"]], left_on="channel_id", right_on="channel_id_src", how="left")
     so = so.merge(dim_customer[["customer_sk", "customer_id_src"]], left_on="customer_id", right_on="customer_id_src", how="left")
@@ -46,12 +47,59 @@ def fact_sales_order_item(ex, dim_channel, dim_product):
     write_fact(out, "fact_sales_order_item.csv")
     return out
 
-
-def fact_payment(ex):
+def fact_payment(ex, dim_address):
     pay = ex["payment"].rename(columns={"payment_id": "payment_id_src"})
     pay = add_date_sk(pay, "paid_at")
 
-    out = pay[["payment_id_src", "order_id", "date_sk", "method", "status", "amount"]].rename(columns={"payment_id_src": "payment_id"})
+    so_cols = ex["sales_order"].columns.str.lower().tolist()
+    candidate_cols = [
+        "billing_address_id",
+        "billing_adress_id",     # typo común
+        "billing_address",       # por si viene sin _id
+        "billing_adress"         # otro typo
+    ]
+    billing_col = next((c for c in candidate_cols if c in so_cols), None)
+
+    if billing_col is not None:
+        so_norm = ex["sales_order"][["order_id", billing_col]]
+        so_norm = so_norm.rename(columns={billing_col: "billing_address_id"})
+        so_norm["billing_address_id"] = (
+            pd.to_numeric(so_norm["billing_address_id"], errors="coerce")
+              .astype("Int64")
+        )
+        pay = pay.merge(so_norm, on="order_id", how="left")
+    else:
+        pay["billing_address_id"] = pd.NA
+
+    dim_addr = dim_address[["address_id_src", "province_sk"]].copy()
+    dim_addr["address_id_src"] = (
+        pd.to_numeric(dim_addr["address_id_src"], errors="coerce").astype("Int64")
+    )
+    dim_addr["province_sk"] = (
+        pd.to_numeric(dim_addr["province_sk"], errors="coerce").astype("Int64")
+    )
+
+    pay["billing_address_id"] = (
+        pd.to_numeric(pay["billing_address_id"], errors="coerce").astype("Int64")
+    )
+
+    pay = pay.merge(
+        dim_addr.rename(columns={"province_sk": "billing_province_sk"}),
+        left_on="billing_address_id",
+        right_on="address_id_src",
+        how="left"
+    )
+
+    pay["billing_province_sk"] = (
+        pd.to_numeric(pay["billing_province_sk"], errors="coerce").astype("Int64")
+    )
+
+    out = pay[[
+        "payment_id_src", "order_id", "date_sk",
+        "billing_address_id", "billing_province_sk",
+        "method", "status", "amount"
+    ]].rename(columns={"payment_id_src": "payment_id"})
+
     write_fact(out, "fact_payment.csv")
     return out
 
