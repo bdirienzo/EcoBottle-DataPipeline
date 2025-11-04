@@ -1,6 +1,6 @@
 import pandas as pd
 from etl.transform.utils import (
-    write_dim, make_sk, to_dt, CFG
+    write_dim, make_sk, to_dt
 )
 
 def build_dim_calendar(extracts) -> pd.DataFrame:

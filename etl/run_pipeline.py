@@ -5,10 +5,10 @@ from .transform.dims import (
 )
 from .transform.facts import (
     fact_sales_order, fact_sales_order_item, fact_payment,
-    fact_shipment, fact_web_session, fact_nps_response
+    fact_shipment, fact_web_session, fact_nps_response, fact_marketing_attribution
 )
 from .load.load_to_warehouse import load
-from .transform.utils import log
+from .transform.utils import log, read_warehouse_table
 
 def main():
     log.info("=== EXTRACT ===")
@@ -30,6 +30,13 @@ def main():
     fact_shipment(ex, dim_address)
     fact_web_session(ex, dim_channel)
     fact_nps_response(ex, dim_channel)
+
+    # ✅ Leer las facts necesarias para la fact derivada
+    f_web = read_warehouse_table("fact","fact_web_session.csv")
+    f_sales = read_warehouse_table("fact","fact_sales_order.csv")
+
+    # ✅ Nueva fact derivada: marketing attribution
+    fact_marketing_attribution(ex, f_web, f_sales)
 
     log.info("=== LOAD ===")
     load()

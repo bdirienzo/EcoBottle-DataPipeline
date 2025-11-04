@@ -3,7 +3,6 @@ import pandas as pd
 from typing import Dict
 import yaml
 import logging
-import os
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 log = logging.getLogger("etl")
@@ -58,3 +57,9 @@ def make_sk(df: pd.DataFrame, order_by: str, sk_name: str, start: int = 1) -> pd
 
 def build_map(df: pd.DataFrame, src_col: str, sk_col: str) -> Dict:
     return dict(zip(df[src_col], df[sk_col]))
+
+def read_warehouse_table(subfolder: str, filename: str) -> pd.DataFrame:
+    path = Path("warehouse") / subfolder / filename
+    if not path.exists():
+        raise FileNotFoundError(f"No se encontró el archivo: {path}")
+    return pd.read_csv(path)
