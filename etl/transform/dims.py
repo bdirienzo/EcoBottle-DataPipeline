@@ -1,7 +1,5 @@
 import pandas as pd
-from etl.transform.utils import (
-    write_dim, make_sk, to_dt
-)
+from etl.transform.utils import (write_dim, make_sk, to_dt)
 
 def build_dim_calendar(extracts) -> pd.DataFrame:
     dates = []
@@ -31,24 +29,47 @@ def build_dim_calendar(extracts) -> pd.DataFrame:
     return cal
 
 def build_dim_channel(extracts) -> pd.DataFrame:
-    ch = extracts["channel"].rename(columns={"channel_id":"channel_id_src"})
-    ch = make_sk(ch, order_by="code", sk_name="channel_sk")
-    write_dim(ch[["channel_sk","channel_id_src","code","name"]], "dim_channel.csv")
+    ch = extracts["channel"].rename(columns={"channel_id": "channel_id_src"}).copy()
+    # SK = ID de origen (uno a uno)
+    ch["channel_sk"] = pd.to_numeric(ch["channel_id_src"], errors="coerce").astype("int64")
+
+    assert ch["channel_sk"].is_unique, "channel_sk no es único"
+
+    write_dim(ch[["channel_sk", "channel_id_src", "code", "name"]], "dim_channel.csv")
     return ch
 
+
 def build_dim_province(extracts) -> pd.DataFrame:
-    pr = extracts["province"].rename(columns={"province_id":"province_id_src"})
-    pr = make_sk(pr, order_by="name", sk_name="province_sk")
-    write_dim(pr[["province_sk","province_id_src","name","code"]], "dim_province.csv")
+    pr = extracts["province"].rename(columns={"province_id": "province_id_src"}).copy()
+    # SK = ID de origen (mantener numeración 1:1 con el sistema transaccional)
+    pr["province_sk"] = pd.to_numeric(pr["province_id_src"], errors="coerce").astype("int64")
+
+    assert pr["province_sk"].is_unique, "province_sk no es único"
+
+    write_dim(
+        pr[["province_sk", "province_id_src", "name", "code"]],
+        "dim_province.csv"
+    )
     return pr
 
 def build_dim_address(extracts, dim_province) -> pd.DataFrame:
-    ad = extracts["address"].rename(columns={"address_id":"address_id_src"})
-    out = ad.merge(dim_province[["province_sk","province_id_src"]],
-                   left_on="province_id", right_on="province_id_src", how="left")
-    write_dim(out[["address_id_src","line1","line2","city","postal_code","country_code","province_id","province_sk"]],
-              "dim_address.csv")
+    ad = extracts["address"].rename(columns={"address_id":"address_id_src"}).copy()
+
+    out = ad.merge(
+        dim_province[["province_sk","province_id_src"]],
+        left_on="province_id", right_on="province_id_src", how="left"
+    )
+
+    # Solo persistimos la SK (sin la FK cruda)
+    write_dim(
+        out[[
+            "address_id_src","line1","line2","city",
+            "postal_code","country_code","province_sk"
+        ]],
+        "dim_address.csv"
+    )
     return out
+
 
 def build_dim_store(extracts, dim_address) -> pd.DataFrame:
     st = extracts["store"].rename(columns={"store_id":"store_id_src"})

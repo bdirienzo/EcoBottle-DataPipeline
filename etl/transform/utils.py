@@ -63,3 +63,11 @@ def read_warehouse_table(subfolder: str, filename: str) -> pd.DataFrame:
     if not path.exists():
         raise FileNotFoundError(f"No se encontró el archivo: {path}")
     return pd.read_csv(path)
+
+def find_ci_col(df, candidates):
+    # devuelve el nombre REAL de la columna en df (case-insensitive)
+    lowmap = {c.lower(): c for c in df.columns}
+    for c in candidates:
+        if c in lowmap:
+            return lowmap[c]
+    return None
