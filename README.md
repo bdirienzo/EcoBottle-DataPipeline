@@ -179,8 +179,6 @@ Brindar una herramienta de análisis que permita:
 - **Actividad de usuarios en canales online**  
 - **Distribución de NPS (Promotores / Neutros / Detractores)**  
 
----
-
 📊 **Herramienta:** [Google Looker Studio](https://lookerstudio.google.com/)  
 📷 *Captura del dashboard final:*  
 ![Dashboard Looker Studio](assets/dashboard_preview.png)
