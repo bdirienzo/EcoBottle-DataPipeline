@@ -4,187 +4,259 @@ Este documento describe las tablas, campos y relaciones del **modelo estrella** 
 
 ---
 
-## 🧠 Tabla de Hechos
+## 🧠 Tablas de Hechos
 
-### FactSalesOrderItem
-Contiene el detalle de las líneas de venta por producto, pedido y fecha.
+### 🧾 FactSalesOrder
+Contiene el detalle de cada pedido o venta efectuada, una fila por orden.
+
+![Modelo Estrella](/assets/star/sales_order.png)
 
 | Campo | Tipo | Descripción | Clave |
 |--------|------|-------------|--------|
-| sales_order_item_id | INTEGER | Identificador único de línea de venta | PK |
-| sales_order_id | INTEGER | Identificador del pedido | FK |
-| product_id | INTEGER | Producto vendido | FK |
-| store_id | INTEGER | Tienda asociada a la venta | FK |
-| channel_id | INTEGER | Canal de venta (online/offline) | FK |
-| customer_id | INTEGER | Cliente que realiza la compra | FK |
-| date_id | INTEGER | Fecha de la venta | FK |
-| quantity | INTEGER | Cantidad vendida | — |
-| unit_price | FLOAT | Precio unitario del producto | — |
-| amount | FLOAT | Monto total (quantity × unit_price) | — |
+| order_id | BIGINT | Identificador único del pedido | PK |
+| customer_sk | INT | Cliente que realiza la compra | FK |
+| channel_sk | INT | Canal de venta (ONLINE/OFFLINE) | FK |
+| store_sk | INT | Tienda física (NULL si online) | FK |
+| billing_address_sk | INT | Dirección de facturación | FK |
+| shipping_address_sk | INT | Dirección de envío | FK |
+| date_sk | INT | Fecha del pedido | FK |
+| status | VARCHAR(20) | Estado del pedido (CREATED, PAID, FULFILLED, CANCELLED, REFUNDED) | — |
+| currency_code | CHAR(3) | Moneda utilizada (ARS) | — |
+| subtotal | DECIMAL(12,2) | Monto sin impuestos | — |
+| tax_amount | DECIMAL(12,2) | Impuestos aplicados | — |
+| shipping_fee | DECIMAL(12,2) | Costo de envío | — |
+| total_amount | DECIMAL(12,2) | Monto total de la orden | — |
 
 ---
 
-### FactPayment
-Registra los pagos asociados a pedidos y clientes.
+### 📦 FactSalesOrderItem
+Detalle por producto dentro de cada orden.
+
+![Modelo Estrella](/assets/star/sales_order_items.png)
 
 | Campo | Tipo | Descripción | Clave |
 |--------|------|-------------|--------|
-| payment_id | INTEGER | Identificador del pago | PK |
-| date_id | INTEGER | Fecha del pago | FK |
-| customer_id | INTEGER | Cliente que realiza el pago | FK |
-| sales_order_id | INTEGER | Pedido asociado al pago | FK |
-| method | TEXT | Medio de pago (tarjeta, transferencia, etc.) | — |
-| status | TEXT | Estado del pago (aprobado, rechazado, pendiente) | — |
-| amount | FLOAT | Monto abonado | — |
+| order_item_id | BIGINT | Identificador único del ítem | PK |
+| order_id | BIGINT | Pedido asociado | FK |
+| product_sk | INT | Producto vendido | FK |
+| channel_sk | INT | Canal de venta | FK |
+| date_sk | INT | Fecha de la venta | FK |
+| quantity | INT | Cantidad vendida | — |
+| unit_price | DECIMAL(12,2) | Precio unitario | — |
+| discount_amount | DECIMAL(12,2) | Descuento aplicado | — |
+| line_total | DECIMAL(12,2) | Importe total de la línea (qty × price – discount) | — |
 
 ---
 
-### FactShipment
-Contiene los envíos realizados a clientes.
+### 💳 FactPayment
+Registra los pagos efectuados por los clientes.
+
+![Modelo Estrella](/assets/star/payment.png)
 
 | Campo | Tipo | Descripción | Clave |
 |--------|------|-------------|--------|
-| shipment_id | INTEGER | Identificador del envío | PK |
-| ship_date_id | INTEGER | Fecha de envío | FK |
-| customer_id | INTEGER | Cliente destinatario | FK |
-| store_id | INTEGER | Tienda emisora | FK |
-| province_id | INTEGER | Provincia de destino | FK |
-| carrier | TEXT | Empresa de transporte | — |
-| cost | FLOAT | Costo de envío | — |
-| delivery_days | INTEGER | Días de entrega estimados | — |
+| payment_id | BIGINT | Identificador del pago | PK |
+| order_id | BIGINT | Pedido asociado | FK |
+| date_sk | INT | Fecha del pago | FK |
+| billing_address_sk | INT | Dirección de facturación | FK |
+| billing_province_sk | INT | Provincia asociada | FK |
+| method | VARCHAR(20) | Medio de pago (CARD, TRANSFER, GATEWAY, CASH) | — |
+| status | VARCHAR(20) | Estado (PAID, PENDING, FAILED, REFUNDED) | — |
+| amount | DECIMAL(12,2) | Monto abonado | — |
 
 ---
 
-### FactWebSession
-Representa la actividad online de los usuarios.
+### 🚚 FactShipment
+Contiene la trazabilidad de los envíos logísticos.
+
+![Modelo Estrella](/assets/star/shipping.png)
 
 | Campo | Tipo | Descripción | Clave |
 |--------|------|-------------|--------|
-| session_id | INTEGER | Identificador de sesión | PK |
-| session_date_id | INTEGER | Fecha de la sesión | FK |
-| customer_id | INTEGER | Usuario identificado | FK |
-| channel_id | INTEGER | Canal digital de acceso | FK |
-| duration_seconds | INTEGER | Duración de la sesión en segundos | — |
-| device_type | TEXT | Tipo de dispositivo (móvil, desktop, tablet) | — |
-| source_medium | TEXT | Fuente o medio de adquisición (orgánico, pago, referido) | — |
+| shipment_id | BIGINT | Identificador del envío | PK |
+| order_id | BIGINT | Pedido asociado | FK |
+| shipped_date_sk | INT | Fecha de despacho | FK |
+| delivered_date_sk | INT | Fecha de entrega | FK |
+| province_sk | INT | Provincia de destino | FK |
+| carrier | VARCHAR(40) | Empresa de transporte | — |
+| status | VARCHAR(20) | Estado (READY, SHIPPED, DELIVERED, CANCELLED) | — |
+| lead_time_days | DECIMAL(12,2) | Tiempo de entrega (días) | — |
 
 ---
 
-### FactNpsResponse
-Almacena las respuestas de encuestas de satisfacción (NPS).
+### 💻 FactWebSession
+Representa las sesiones online registradas por los usuarios.
+
+![Modelo Estrella](/assets/star/web_session.png)
 
 | Campo | Tipo | Descripción | Clave |
 |--------|------|-------------|--------|
-| response_id | INTEGER | Identificador de respuesta | PK |
-| response_date_id | INTEGER | Fecha de la respuesta | FK |
-| customer_id | INTEGER | Cliente que responde | FK |
-| score | INTEGER | Valor NPS (0–10) | — |
-| classification | TEXT | Promotor / Neutro / Detractor | — |
+| session_id | BIGINT | Identificador único de la sesión | PK |
+| customer_sk | INT | Cliente (NULL si anónimo) | FK |
+| channel_sk | INT | Canal digital (ONLINE) | FK |
+| date_sk | INT | Fecha de inicio de sesión | FK |
+| source | VARCHAR(50) | Origen del tráfico (ads, direct, email, etc.) | — |
+| device | VARCHAR(30) | Dispositivo (desktop, mobile, tablet) | — |
+| started_at | TIMESTAMP | Timestamp de inicio | — |
+| ended_at | TIMESTAMP | Timestamp de cierre | — |
+
+---
+
+### 💬 FactNpsResponse
+Respuestas de encuestas de satisfacción (NPS).
+
+![Modelo Estrella](/assets/star/nps_response.png)
+
+| Campo | Tipo | Descripción | Clave |
+|--------|------|-------------|--------|
+| nps_id | BIGINT | Identificador de respuesta | PK |
+| customer_id | INT | Cliente que responde | FK |
+| channel_sk | INT | Canal asociado | FK |
+| date_sk | INT | Fecha de la respuesta | FK |
+| score | SMALLINT | Valor de 0 a 10 | — |
+| is_detractor | TINYINT | 1 si score ≤ 6 | — |
+| is_passive | TINYINT | 1 si 7 ≤ score ≤ 8 | — |
+| is_promoter | TINYINT | 1 si score ≥ 9 | — |
+| comment | TEXT | Comentario opcional | — |
+
+---
+
+### 📈 FactMarketingAttribution
+Asigna sesiones digitales a resultados comerciales.
+
+![Modelo Estrella](/assets/star/marketing.png)
+
+| Campo | Tipo | Descripción | Clave |
+|--------|------|-------------|--------|
+| session_id | BIGINT | Identificador de la sesión (fuente OLTP) | PK |
+| customer_sk | INT | Cliente identificado | FK |
+| channel_sk | INT | Canal de interacción | FK |
+| date_sk | INT | Fecha del evento | FK |
+| source | VARCHAR(50) | Fuente (ads, organic, referral) | — |
+| device | VARCHAR(30) | Dispositivo (desktop, mobile) | — |
+| converted_flag | TINYINT | 1 si la sesión generó compra | — |
+| orders_attributed | INT | Número de pedidos atribuidos | — |
+| revenue_attributed | DECIMAL(12,2) | Ingreso total atribuido | — |
 
 ---
 
 ## 🌐 Tablas Dimensión
 
-### DimCustomer
+### 👥 DimCustomer
 | Campo | Tipo | Descripción | Clave |
 |--------|------|-------------|--------|
-| customer_id | INTEGER | Identificador del cliente | PK |
-| customer_code | TEXT | Código de cliente | — |
-| full_name | TEXT | Nombre y apellido | — |
-| email | TEXT | Correo electrónico | — |
-| province_id | INTEGER | Provincia de residencia | FK |
-| address_id | INTEGER | Dirección asociada | FK |
-| created_at | DATE | Fecha de alta del cliente | — |
+| customer_sk | INT | Clave surrogate del cliente | PK |
+| customer_id_src | INT | ID original en sistema fuente | — |
+| email | VARCHAR(120) | Correo electrónico | — |
+| first_name | VARCHAR(80) | Nombre | — |
+| last_name | VARCHAR(80) | Apellido | — |
+| status | CHAR(1) | Estado (‘A’ activo / ‘I’ inactivo) | — |
+| created_at | TIMESTAMP | Fecha de alta | — |
 
 ---
 
-### DimProduct
+### 📦 DimProduct
 | Campo | Tipo | Descripción | Clave |
 |--------|------|-------------|--------|
-| product_id | INTEGER | Identificador del producto | PK |
-| product_code | TEXT | Código del producto | — |
-| product_name | TEXT | Nombre del producto | — |
-| category_id | INTEGER | Categoría del producto | FK |
-| brand | TEXT | Marca o línea de producto | — |
-| unit_price | FLOAT | Precio unitario | — |
+| product_sk | INT | Clave surrogate del producto | PK |
+| product_id_src | INT | ID original del producto | — |
+| sku | VARCHAR(40) | Código SKU | — |
+| name | VARCHAR(120) | Nombre del producto | — |
+| category_name | VARCHAR(80) | Categoría o familia | — |
+| list_price | DECIMAL(12,2) | Precio de lista | — |
+| status | CHAR(1) | Estado (‘A’ / ‘I’) | — |
 
 ---
 
-### DimStore
+### 🏬 DimStore
 | Campo | Tipo | Descripción | Clave |
 |--------|------|-------------|--------|
-| store_id | INTEGER | Identificador de tienda | PK |
-| store_name | TEXT | Nombre de la sucursal o punto de venta | — |
-| province_id | INTEGER | Provincia donde opera | FK |
+| store_sk | INT | Clave surrogate | PK |
+| store_id_src | INT | ID fuente | — |
+| name | VARCHAR(80) | Nombre de la tienda | — |
+| address_sk | INT | Dirección de la tienda | FK |
 
 ---
 
-### DimChannel
+### 🧭 DimChannel
 | Campo | Tipo | Descripción | Clave |
 |--------|------|-------------|--------|
-| channel_id | INTEGER | Identificador del canal | PK |
-| channel_name | TEXT | Canal de venta (Online, Retail, Distribuidor) | — |
+| channel_sk | INT | Clave surrogate | PK |
+| channel_id_src | INT | ID fuente | — |
+| code | VARCHAR(20) | Código (‘ONLINE’, ‘OFFLINE’, etc.) | — |
+| name | VARCHAR(50) | Nombre descriptivo del canal | — |
 
 ---
 
-### DimProvince
+### 🗺️ DimAddress
 | Campo | Tipo | Descripción | Clave |
 |--------|------|-------------|--------|
-| province_id | INTEGER | Identificador de provincia | PK |
-| province_name | TEXT | Nombre de la provincia | — |
-| region | TEXT | Región geográfica (NOA, Cuyo, Patagonia, etc.) | — |
+| address_sk | INT | Clave surrogate | PK |
+| address_id_src | INT | ID original | — |
+| city | VARCHAR(80) | Ciudad | — |
+| postal_code | VARCHAR(20) | Código postal | — |
+| country_code | CHAR(2) | País (‘AR’) | — |
+| province_sk | INT | Provincia asociada | FK |
 
 ---
 
-### DimAddress
+### 🏙️ DimProvince
 | Campo | Tipo | Descripción | Clave |
 |--------|------|-------------|--------|
-| address_id | INTEGER | Identificador de dirección | PK |
-| street | TEXT | Calle y número | — |
-| city | TEXT | Ciudad o localidad | — |
-| postal_code | TEXT | Código postal | — |
-| province_id | INTEGER | Provincia correspondiente | FK |
+| province_sk | INT | Clave surrogate | PK |
+| province_id_src | INT | ID fuente | — |
+| name | VARCHAR(50) | Nombre de la provincia | — |
+| code | VARCHAR(10) | Código corto | — |
 
 ---
 
-### DimCalendar
+### 📅 DimCalendar
 | Campo | Tipo | Descripción | Clave |
 |--------|------|-------------|--------|
-| date_id | INTEGER | Identificador de fecha | PK |
-| full_date | DATE | Fecha completa | — |
-| year | INTEGER | Año | — |
-| quarter | INTEGER | Trimestre (1–4) | — |
-| month | INTEGER | Mes (1–12) | — |
-| month_name | TEXT | Nombre del mes | — |
-| day | INTEGER | Día del mes | — |
-| weekday | TEXT | Día de la semana | — |
-| is_weekend | BOOLEAN | Indica si es fin de semana | — |
+| date_sk | INT | Clave surrogate (YYYYMMDD) | PK |
+| date | DATE | Fecha calendario | — |
+| year | INT | Año | — |
+| quarter | INT | Trimestre (1–4) | — |
+| month | INT | Mes (1–12) | — |
+| day | INT | Día del mes | — |
+| month_name | VARCHAR(20) | Nombre del mes | — |
+| is_month_end | TINYINT | 1 si es fin de mes | — |
 
 ---
 
 ## 🔗 Relaciones Principales (PK–FK)
 | Tabla | Relación | Clave Foránea |
 |--------|-----------|---------------|
-| FactSalesOrderItem | → DimCustomer | customer_id |
-| FactSalesOrderItem | → DimProduct | product_id |
-| FactSalesOrderItem | → DimStore | store_id |
-| FactSalesOrderItem | → DimChannel | channel_id |
-| FactPayment | → DimCustomer | customer_id |
-| FactShipment | → DimStore | store_id |
-| FactShipment | → DimProvince | province_id |
-| FactWebSession | → DimCustomer | customer_id |
-| FactNpsResponse | → DimCustomer | customer_id |
-| DimCustomer | → DimProvince | province_id |
-| DimCustomer | → DimAddress | address_id |
+| FactSalesOrder | → DimCustomer | customer_sk |
+| FactSalesOrder | → DimChannel | channel_sk |
+| FactSalesOrder | → DimStore | store_sk |
+| FactSalesOrder | → DimAddress | billing_address_sk / shipping_address_sk |
+| FactSalesOrder | → DimCalendar | date_sk |
+| FactSalesOrderItem | → DimProduct | product_sk |
+| FactSalesOrderItem | → DimChannel | channel_sk |
+| FactSalesOrderItem | → DimCalendar | date_sk |
+| FactPayment | → DimCalendar | date_sk |
+| FactShipment | → DimProvince | province_sk |
+| FactShipment | → DimCalendar | shipped_date_sk / delivered_date_sk |
+| FactWebSession | → DimChannel | channel_sk |
+| FactWebSession | → DimCustomer | customer_sk |
+| FactWebSession | → DimCalendar | date_sk |
+| FactNpsResponse | → DimChannel | channel_sk |
+| FactMarketingAttribution | → DimChannel | channel_sk |
+| FactMarketingAttribution | → DimCustomer | customer_sk |
+| FactMarketingAttribution | → DimCalendar | date_sk |
 
 ---
 
 ## 🧩 Supuestos de negocio
-- Cada cliente pertenece a **una provincia y una dirección principal**.  
-- Un pedido puede incluir **múltiples productos** (representados en `FactSalesOrderItem`).  
-- Los pagos pueden ser **parciales o múltiples** por pedido.  
-- Las sesiones web se registran solo para **usuarios logueados o identificables**.  
-- Las fechas se gestionan de manera centralizada a través de `DimCalendar`.  
-- Los valores NPS se normalizan en una escala de 0 a 10.
+- Los pedidos pueden incluir múltiples ítems (`FactSalesOrderItem`).  
+- Una sesión puede o no estar asociada a un cliente (clientes anónimos).  
+- Los pagos y envíos se asocian 1:1 con órdenes, pero pueden variar en tiempos.  
+- Todas las fechas derivan de `DimCalendar` y se identifican con `date_sk`.  
+- Las claves *surrogate* (`*_sk`) garantizan integridad entre procesos ETL y modelo BI.  
+- Los KPIs de negocio se calculan sobre hechos agregados:  
+  - **Ventas Totales**, **Ticket Promedio**, **Usuarios Activos**, **NPS**, **Conversion Rate**, **Tiempo de Entrega**, **Revenue Atribuido**.
 
 ---
+
+✳️ *Versión 2.0 — Modelo Estrella Completo (EcoBottle AR, 2025)*
