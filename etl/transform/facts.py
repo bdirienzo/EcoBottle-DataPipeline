@@ -1,5 +1,7 @@
 import pandas as pd
-from etl.transform.utils import write_fact, add_date_sk, CFG, log, find_ci_col
+import numpy as np
+from etl.transform.utils import write_fact, add_date_sk, CFG, log, find_ci_col, to_dt
+import logging
 
 def fact_sales_order(ex, dim_channel, dim_customer, dim_address, dim_store):
     so = ex["sales_order"].rename(columns={"order_id": "order_id_src"}).copy()
@@ -140,8 +142,6 @@ def fact_sales_order_item(ex, dim_channel, dim_product):
     write_fact(out, "fact_sales_order_item.csv")
     return out
 
-
-
 def fact_payment(ex, dim_address):
     pay = ex["payment"].rename(columns={"payment_id": "payment_id_src"})
     pay = add_date_sk(pay, "paid_at")
@@ -182,30 +182,83 @@ def fact_payment(ex, dim_address):
     write_fact(out, "fact_payment.csv")
     return out
 
+def fact_shipment(ex: dict, dim_address: pd.DataFrame, dim_store: pd.DataFrame) -> pd.DataFrame:
+    def norm(s: pd.Series) -> pd.Series:
+        return (s.astype(str).str.strip()
+                .str.replace(r"\.0$", "", regex=True)
+                .str.replace(r"\s+", " ", regex=True))
 
-def fact_shipment(ex, dim_address):
-    sh = ex["shipment"].rename(columns={"shipment_id": "shipment_id_src"})
+    # --- SHIPMENT ---
+    sh = ex["shipment"].rename(columns={"shipment_id": "shipment_id_src"}).copy()
+    sh["shipped_at"]   = to_dt(sh.get("shipped_at"))
+    sh["delivered_at"] = to_dt(sh.get("delivered_at"))
     sh = add_date_sk(sh, "shipped_at", "shipped_date_sk")
     sh = add_date_sk(sh, "delivered_at", "delivered_date_sk")
+    if "carrier" not in sh.columns: sh["carrier"] = pd.NA
+    if "status"  not in sh.columns: sh["status"]  = pd.NA
+    sh["order_id"] = norm(sh["order_id"])
 
-    so = ex["sales_order"][["order_id", "shipping_address_id"]]
-    da = dim_address[["address_id_src", "province_sk"]]
-    base = sh.merge(so, on="order_id", how="left").merge(
-        da, left_on="shipping_address_id", right_on="address_id_src", how="left"
+    # --- SALES ORDER (normalizamos clave de address) ---
+    so = ex["sales_order"][["order_id", "shipping_address_id"]].copy()
+    so["order_id"] = norm(so["order_id"])
+    so["shipping_address_id_norm"] = norm(so["shipping_address_id"])
+
+    # --- DIM ADDRESS (normalizamos clave y usamos SK si existe) ---
+    da = dim_address.copy()
+    da["address_id_src_norm"] = norm(da["address_id_src"])
+
+    # columnas para traer desde la address
+    take_cols = ["address_id_src_norm", "province_sk"]
+    has_addr_sk = "address_sk" in da.columns
+    if has_addr_sk:
+        take_cols.append("address_sk")
+
+    da_n = da[take_cols].rename(columns={"province_sk": "province_sk_addr"})
+
+    # --- JOIN: shipment -> sales_order -> dim_address(normalizada) ---
+    base = sh.merge(so[["order_id","shipping_address_id_norm"]], on="order_id", how="left")
+    base = base.merge(
+        da_n, left_on="shipping_address_id_norm", right_on="address_id_src_norm", how="left"
     )
 
-    from etl.transform.utils import to_dt
-    base["shipped_at"] = to_dt(ex["shipment"]["shipped_at"])
-    base["delivered_at"] = to_dt(ex["shipment"]["delivered_at"])
-    base["lead_time_days"] = (base["delivered_at"] - base["shipped_at"]).dt.total_seconds() / 86400.0
+    # Provincia desde la address (nullable Int64)
+    base["province_sk"] = base["province_sk_addr"].astype("Int64")
 
+    # Detectar PICKUP
+    is_pickup = base["carrier"].fillna("").str.lower().str.contains("pickup")
+
+    # --- STORE (solo para pickups; ya te funcionó, lo dejamos igual) ---
+    ds = dim_store.copy()
+    store_key = "store_sk" if "store_sk" in ds.columns else "store_id_src"
+    ds_map = ds[[store_key, "province_sk"]].dropna().drop_duplicates().rename(
+        columns={store_key: "pickup_store_key", "province_sk": "province_sk_store"}
+    )
+    base = base.merge(ds_map, left_on="province_sk", right_on="province_sk_store", how="left")
+
+    # --- LOCATORS ---
+    # Delivery: address
+    if has_addr_sk:
+        base["shipping_address_sk"] = np.where(~is_pickup, base["address_sk"], pd.NA)
+    else:
+        # Fallback: guardamos el natural key para no perder el link (útil mientras agregás address_sk a la dim)
+        base["shipping_address_sk"] = np.where(~is_pickup, base["address_id_src_norm"], pd.NA)
+
+    # Pickup: store
+    base["pickup_store_sk"] = np.where(is_pickup, base["pickup_store_key"], pd.NA)
+    base["location_type"]   = np.where(is_pickup, "store", "address")
+
+    # Lead time (días)
     delta = base["delivered_at"] - base["shipped_at"]
-    base["lead_time_days"] = delta.dt.days.astype("Int64")
+    base["lead_time_days"] = (delta.dt.total_seconds() / 86400.0).round(3)
 
     out = base[[
         "shipment_id_src", "order_id", "shipped_date_sk", "delivered_date_sk",
-        "carrier", "status", "lead_time_days", "province_sk"
+        "carrier", "status", "lead_time_days", "province_sk",
+        "location_type", "shipping_address_sk", "pickup_store_sk"
     ]].rename(columns={"shipment_id_src": "shipment_id"})
+
+    for c in ("shipped_date_sk", "delivered_date_sk", "province_sk"):
+        out[c] = out[c].astype("Int64")
 
     write_fact(out, "fact_shipment.csv")
     return out
