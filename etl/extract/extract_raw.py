@@ -1,4 +1,9 @@
-from etl.transform.utils import read_raw
+from etl.transform.utils import read_raw #-> Importamos read_raw para utilizar
+
+# - Se define la función extract() para extraer los datos de los .csv.
+# - Se le da estructura de diccionario, para poder acceder a un df usando una key, ej: data["channel"].
+# - Las keys son los nombres de las tablas y los valores son df obtenidos con read_raw.
+# - read_raw es una función en utils que estandariza la lectura de .csv con pandas y utiliza una ruta preestablecida con settings.yaml.
 
 def extract():
     data = {
@@ -17,4 +22,4 @@ def extract():
         "nps_response": read_raw("nps_response.csv"),
     }
     return data
-    
+    # - Devuelve un diccionario completo.
