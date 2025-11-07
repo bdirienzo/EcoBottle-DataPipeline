@@ -12,9 +12,10 @@ from .transform.utils import log, read_warehouse_table
 
 def main():
     log.info("=== EXTRACT ===")
-    ex = extract()
+    ex = extract() #El dict con los df pasa a llamarse ex
 
     log.info("=== TRANSFORM (DIM) ===")
+    #Pasamos el diccionario ex a todas las dimensiones y fact_tables
     dim_calendar  = build_dim_calendar(ex)
     dim_channel   = build_dim_channel(ex)
     dim_province  = build_dim_province(ex)
@@ -31,11 +32,9 @@ def main():
     fact_web_session(ex, dim_channel)
     fact_nps_response(ex, dim_channel)
 
-    # ✅ Leer las facts necesarias para la fact derivada
+    #lee las fact para la fact de marketing y llama a la fact
     f_web = read_warehouse_table("fact","fact_web_session.csv")
     f_sales = read_warehouse_table("fact","fact_sales_order.csv")
-
-    # ✅ Nueva fact derivada: marketing attribution
     fact_marketing_attribution(ex, f_web, f_sales)
 
     log.info("=== LOAD ===")
