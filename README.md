@@ -177,7 +177,7 @@ Brindar una herramienta de análisis que permita:
 - **Actividad de usuarios en canales online**  
 - **Distribución de NPS (Promotores / Neutros / Detractores)**  
 
-📊 **Herramienta:** [Power BI](https://app.powerbi.com/groups/me/reports/25ea3cf2-4ca3-4061-8d0f-9bcb9265a985?ctid=3e0513d6-68fa-416e-8de1-6c5cdc319ffa&pbi_source=linkShare&bookmarkGuid=f92c91bd-974a-4d85-a508-0e9d4fa2ac97)
+📊 **Herramienta:** [Power BI](https://app.powerbi.com/view?r=eyJrIjoiNzhhNTM4ZDQtYThjOS00Yjg2LWE1NWMtYWM5YjI3Njg5ZjUyIiwidCI6IjNlMDUxM2Q2LTY4ZmEtNDE2ZS04ZGUxLTZjNWNkYzMxOWZmYSIsImMiOjR9&pageName=f058cc2ec84f9d72e255)
 
 ---
 
