@@ -4,7 +4,7 @@
 
 **EcoBottle AR** es un proyecto académico de **Data Warehouse & Business Intelligence** que implementa un mini–ecosistema de datos comercial **(online + offline)** para una empresa ficticia dedicada a la venta de botellas reutilizables.
 
-El objetivo principal es diseñar e implementar un **pipeline ETL reproducible en Python**, construir un **modelo estrella (Kimball)**, y desarrollar un **dashboard analítico en Looker Studio** que permita monitorear los indicadores clave del negocio.
+El objetivo principal es diseñar e implementar un **pipeline ETL reproducible en Python**, construir un **modelo estrella (Kimball)**, y desarrollar un **dashboard analítico en Power BI** que permita monitorear los indicadores clave del negocio.
 
 El proyecto integra múltiples fuentes de información (ventas, pagos, envíos, sesiones web y encuestas NPS) para generar una vista consolidada del desempeño comercial y de la experiencia del cliente.  
 
@@ -75,7 +75,7 @@ El **esquema estrella** consolida los procesos clave del negocio en varias *fact
 **Dimensiones comunes:**
 - `DimCalendar`, `DimCustomer`, `DimProduct`, `DimStore`, `DimChannel`, `DimProvince`, `DimAddress`, entre otras.
 
-```Todos los detalles técnicos del modelo (campos, tipos, claves y reglas de negocio) se documentan en docs/data_dictionary.md, junto con los esquemas visuales individuales de cada proceso.```
+```Todos los detalles técnicos del modelo (campos, tipos, claves y reglas de negocio) se documentan en el docs/data_dictionary.md, junto con los esquemas visuales individuales de cada proceso.```
 
 ---
 
@@ -101,7 +101,7 @@ Está desarrollado en **Python** y estructurado en módulos independientes que r
 ### 1️⃣ 5.1 Extract
 En esta etapa se realiza la **lectura de las fuentes RAW** desde la carpeta `/raw`, aplicando validaciones básicas de formato y consistencia (por ejemplo: columnas esperadas, tipos de datos, duplicados y valores nulos críticos).  
 
-Los datos se cargan en estructuras temporales de `pandas.DataFrame` listas para ser transformadas.
+Los datos se cargan en estructuras temporales de listas para ser transformadas.
 
 ```bash
 python -m etl.extract
@@ -149,18 +149,16 @@ Los siguientes **KPIs** se utilizan en el dashboard analítico para evaluar el r
 | **Ventas Totales** | `SUM(amount)` en `FactSalesOrderItem` | Valor total vendido en un período. |
 | **Usuarios Activos** | `COUNT(DISTINCT customer_id)` | Número de clientes que realizaron al menos una compra. |
 | **Ticket Promedio** | `SUM(amount) / COUNT(DISTINCT sales_order_id)` | Valor promedio por pedido. |
-| **Pagos Aprobados** | `COUNT(payment_id WHERE status = 'Aprobado')` | Transacciones de pago exitosas. |
 | **Costo de Envíos** | `SUM(cost)` en `FactShipment` | Gasto total asociado a entregas. |
 | **NPS (Net Promoter Score)** | %Promotores − %Detractores | Nivel de satisfacción y lealtad del cliente. |
-| **Duración Promedio de Sesiones** | `AVG(duration_seconds)` en `FactWebSession` | Tiempo promedio que un usuario permanece en la web. |
 
-> *Estos indicadores se visualizan en el dashboard Looker Studio para monitorear tendencias de ventas, desempeño logístico y comportamiento del cliente.*
+> *Estos indicadores se visualizan en el dashboard de Power BI para monitorear tendencias de ventas, desempeño logístico y comportamiento del cliente.*
 
 ---
 
 ## 📈 7. Dashboard Analítico
 
-A partir del modelo estrella almacenado en `warehouse/`, se desarrolló un **dashboard interactivo** en **Looker Studio**, que consolida los KPIs del negocio y permite explorar los datos desde distintas perspectivas: comercial, logística, digital y de experiencia del cliente.
+A partir del modelo estrella almacenado en `warehouse/`, se desarrolló un **dashboard interactivo** en **Power BI**, que consolida los KPIs del negocio y permite explorar los datos desde distintas perspectivas: comercial, logística, digital y de experiencia del cliente.
 
 El tablero integra información de todas las *fact tables* (ventas, pagos, envíos, sesiones y NPS) y ofrece una visión unificada del desempeño general de **EcoBottle AR**.
 
@@ -179,9 +177,7 @@ Brindar una herramienta de análisis que permita:
 - **Actividad de usuarios en canales online**  
 - **Distribución de NPS (Promotores / Neutros / Detractores)**  
 
-📊 **Herramienta:** [Google Looker Studio](https://lookerstudio.google.com/)  
-📷 *Captura del dashboard final:*  
-![Dashboard Looker Studio](assets/dashboard_preview.png)
+📊 **Herramienta:** [Power BI](https://app.powerbi.com/links/-lUzHvJeUT?ctid=3e0513d6-68fa-416e-8de1-6c5cdc319ffa&pbi_source=linkShare)
 
 ---
 
