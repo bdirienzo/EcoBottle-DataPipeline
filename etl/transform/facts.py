@@ -343,7 +343,7 @@ def fact_marketing_attribution(
     prefer: str = "in_session_then_prev",   # 'in_session_only' | 'prev_only' | 'in_session_then_prev'
 ) -> pd.DataFrame:
 
-    log.info("=== FACT: Marketing Attribution (hora/ventana) ===")
+    log.info("=== FACT: Marketing Attribution (transforming...) ===")
 
     # --- 1) Validar columnas mínimas en WEB (acepta customer_id o customer_sk)
     base_ws_needed = {"session_id", "date_sk", "source", "device", "channel_sk", "started_at"}
