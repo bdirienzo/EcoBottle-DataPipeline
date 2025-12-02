@@ -187,5 +187,5 @@ Este proyecto fue desarrollado por **Bernardo Di Rienzo** en el marco de la Lice
 
 Los archivos originales de datos (`/raw`) y el diagrama entidad–relación (`DER`) provienen del repositorio académico base del profesor **Augusto Carmona**, utilizados únicamente como punto de partida para la práctica de modelado y análisis.
 
-> © 2025 Bernardo Di Rienzo – MIT License. Todos los derechos reservados sobre los desarrollos y documentación propios.
+> © 2025 Berni Di Rienzo – MIT License. Todos los derechos reservados sobre los desarrollos y documentación propios.
 
